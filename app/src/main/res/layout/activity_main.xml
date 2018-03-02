@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.venom.bgwifiservicetest.MainActivity">
+
+    <TextView
+        android:layout_width="381dp"
+        android:layout_height="451dp"
+        android:text="Hello World!"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.083" />
+
+    <Button
+        android:id="@+id/start_button"
+        android:layout_width="184dp"
+        android:layout_height="wrap_content"
+        android:onClick="startService"
+        android:text="@string/start_service_btn_txt"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="464dp" />
+
+    <Button
+        android:id="@+id/stop_button"
+        android:layout_width="199dp"
+        android:layout_height="wrap_content"
+        android:onClick="stopService"
+        android:text="@string/stop_service_btn_txt"
+        tools:layout_editor_absoluteX="195dp"
+        tools:layout_editor_absoluteY="464dp" />
+
+</android.support.constraint.ConstraintLayout>
