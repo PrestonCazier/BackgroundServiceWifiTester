@@ -28,6 +28,8 @@ import java.lang.reflect.Method;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static android.content.ContentValues.TAG;
+
 /**
  * Created by Venom on 2/23/2018.
  */
@@ -116,6 +118,7 @@ public class BackgroundWifiService extends Service {
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
+            Log.i(TAG, "createLocationListener: permissions not found");
             return;
         }
         mLocationManager.requestLocationUpdates(
