@@ -104,9 +104,9 @@ public class BackgroundWifiService extends Service {
             // enable GPS
         }
 
-        int hasFineLocation = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
-        int hasCoarseLocation = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
-        
+        int hasFineLocation = ActivityCompat.checkSelfPermission(mBaseContext, Manifest.permission.ACCESS_FINE_LOCATION);
+        int hasCoarseLocation = ActivityCompat.checkSelfPermission(mBaseContext, Manifest.permission.ACCESS_COARSE_LOCATION);
+
         if (hasFineLocation != PackageManager.PERMISSION_GRANTED &&
                 hasCoarseLocation != PackageManager.PERMISSION_GRANTED ) {
             // TODO: Consider calling

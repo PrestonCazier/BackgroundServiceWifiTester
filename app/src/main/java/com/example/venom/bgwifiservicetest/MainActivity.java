@@ -69,6 +69,22 @@ public class MainActivity extends AppCompatActivity {
         if (!mLocationListener.getGpsStatus()) {
             // enable GPS
         }
+
+        int hasFineLocation = ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION);
+        int hasCoarseLocation = ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION);
+
+        if (hasFineLocation != PackageManager.PERMISSION_GRANTED &&
+                hasCoarseLocation != PackageManager.PERMISSION_GRANTED ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+
         mLocationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER, 5000, 10, mLocationListener);
     }
