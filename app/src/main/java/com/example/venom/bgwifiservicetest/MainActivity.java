@@ -3,10 +3,14 @@ package com.example.venom.bgwifiservicetest;
 import android.Manifest;
 import android.accessibilityservice.AccessibilityService;
 import android.app.ActivityManager;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.os.Build;
+import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -19,6 +23,9 @@ public class MainActivity extends AppCompatActivity {
     BackgroundWifiService mBGWService;
     Intent mServiceIntent;
     Context ctx;
+    LocationManager mLocationManager;
+    GPSLocationListener mLocationListener;
+    PendingIntent mPendingIntent;
 
     public Context getCtx() {
         return ctx;
@@ -29,12 +36,56 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ctx = this;
-        mBGWService = new BackgroundWifiService(getCtx());
-        mServiceIntent = new Intent(getCtx(), mBGWService.getClass());
-        if (!isMyServiceRunning(mBGWService.getClass())) {
-            startService(mServiceIntent);
-        }
 
+        LocationManager mLocationManager = (LocationManager)
+                getSystemService(Context.LOCATION_SERVICE);
+
+        createBackgroundService();
+        scheduleAlarms();
+        createLocationListener();
+        setTextInfo();
+    }
+
+    private void createBackgroundService() {
+        mBGWService = new BackgroundWifiService(getCtx(), mLocationManager);
+        mServiceIntent = new Intent(getCtx(), mBGWService.getClass());
+
+        //if (!isMyServiceRunning(mBGWService.getClass())) {
+        //startService(mServiceIntent);
+        //}
+
+        // these are from example at https://gist.github.com/BrandonSmith/6679223
+        // there purpose is to pass data to the intent
+        //notificationIntent.putExtra(NotificationPublisher.NOTIFICATION_ID, 1);
+        //notificationIntent.putExtra(NotificationPublisher.NOTIFICATION, notification);
+        mPendingIntent = PendingIntent.getBroadcast(
+                ctx, 0, mServiceIntent, PendingIntent.FLAG_UPDATE_CURRENT
+        );
+    }
+
+    private void createLocationListener() {
+        // check to see if gps is on
+        mLocationListener = new GPSLocationListener(ctx);
+        if (!mLocationListener.getGpsStatus()) {
+            // enable GPS
+        }
+        mLocationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER, 5000, 10, mLocationListener);
+    }
+
+    private void scheduleAlarms() {
+        long futureInMillis = SystemClock.elapsedRealtime() + 30000;
+        AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        // sets a single non repeating alarm
+        // alarmManager.set(AlarmManager.ELAPSED_REALTIME, futureInMillis, pendingIntent);
+
+        // set a repeating alarm
+        alarmManager.setInexactRepeating(
+                AlarmManager.ELAPSED_REALTIME, futureInMillis, 60000, mPendingIntent
+        );
+    }
+
+    public void setTextInfo() {
         final TextView textView = (TextView) findViewById(R.id.main_text);
         textView.setText(
                 "SERIAL: " + Build.SERIAL + "\n" +
@@ -72,6 +123,9 @@ public class MainActivity extends AppCompatActivity {
             mPhoneNumber = tMgr.getDeviceId();
             textView.setText(textView.getText() + "\n" + mPhoneNumber);
         }
+
+        // add gps location data
+        textView.setText(textView.getText() + "\n" + GPSLocationListener.myLocation);
     }
 
     public void startService(View view) {

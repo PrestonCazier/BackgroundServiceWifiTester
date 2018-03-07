@@ -1,10 +1,14 @@
 package com.example.venom.bgwifiservicetest;
 
+import android.Manifest;
 import android.app.Service;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,7 +16,9 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.widget.Toast;
 import android.os.Process;
@@ -26,7 +32,7 @@ import java.util.TimerTask;
  * Created by Venom on 2/23/2018.
  */
 
-public class BackgroundWifiService extends Service implements LocationListener{
+public class BackgroundWifiService extends Service {
 
     // Handler that receives messages from the thread
     private final class ServiceHandler extends Handler {
@@ -36,54 +42,32 @@ public class BackgroundWifiService extends Service implements LocationListener{
 
         @Override
         public void handleMessage(Message msg) {
-
-
             boolean mobileDataEnabled = false;  // initially assume disabled
+
             ConnectivityManager cm = (ConnectivityManager) getBaseContext()
                     .getSystemService(Context.CONNECTIVITY_SERVICE);
 
-            //while(true) {
-                showToast("Starting IntentService");
-                try {
-                    Thread.sleep(10000);
-                    showToast("10 Seconds Have Passed");
+            //showToast("Starting IntentService");
 
-                    Class cmClass = Class.forName(cm.getClass().getName());
-                    Method method = cmClass.getDeclaredMethod("getMobileDataEnabled");
-
-                    method.setAccessible(true);
-                    mobileDataEnabled = (Boolean)method.invoke(cm);
-                    String message = "mobile data is " + mobileDataEnabled;
-                    showToast(message);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                } catch (NoSuchMethodException e) {
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                }
-                showToast("Finishing IntentService");
-            //}
-
-
-
-
-
-
-            /*// Normally we would do some work here, like download a file.
-            // For our sample, we just sleep for 5 seconds.
             try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                // Restore interrupt status.
-                Thread.currentThread().interrupt();
-            }*/
-            // Stop the service using the startId, so that we don't stop
-            // the service in the middle of handling another job
+                Class cmClass = Class.forName(cm.getClass().getName());
+                Method method = cmClass.getDeclaredMethod("getMobileDataEnabled");
+
+                method.setAccessible(true);
+                mobileDataEnabled = (Boolean) method.invoke(cm);
+                String message = "mobile data is " + mobileDataEnabled;
+                showToast(message);
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InvocationTargetException e) {
+                e.printStackTrace();
+            }
+            showToast("Finishing IntentService");
+
             stopSelf(msg.arg1);
         }
     }
@@ -96,15 +80,46 @@ public class BackgroundWifiService extends Service implements LocationListener{
     int counter = 0;
     private Timer timer;
     private TimerTask timerTask;
-    long oldTime=0;
+    long oldTime = 0;
+    GPSLocationListener mLocationListener;
+    LocationManager mLocationManager;
+    Context mBaseContext;
 
     public BackgroundWifiService() {
         super();
     }
 
-    public BackgroundWifiService(Context applicationContext) {
+    public BackgroundWifiService(Context applicationContext, LocationManager locManager) {
         super();
+        mLocationManager = locManager;
+        mBaseContext = applicationContext;
+        createLocationListener();
         Log.i("HERE", "here I am!");
+    }
+
+    private void createLocationListener() {
+        // check to see if gps is on
+        mLocationListener = new GPSLocationListener(mBaseContext);
+        if (!mLocationListener.getGpsStatus()) {
+            // enable GPS
+        }
+
+        int hasFineLocation = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+        int hasCoarseLocation = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
+        
+        if (hasFineLocation != PackageManager.PERMISSION_GRANTED &&
+                hasCoarseLocation != PackageManager.PERMISSION_GRANTED ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        mLocationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER, 5000, 10, mLocationListener);
     }
 
     /**
@@ -118,7 +133,14 @@ public class BackgroundWifiService extends Service implements LocationListener{
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
         Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show();
-        startTimer();
+        //startTimer();
+
+        // For each start request, send a message to start a job and deliver the
+        // start ID so we know which request we're stopping when we finish the job
+        Message msg = mServiceHandler.obtainMessage();
+        msg.arg1 = startId;
+        mServiceHandler.sendMessage(msg);
+
         return mStartMode;
     }
 
@@ -172,12 +194,12 @@ public class BackgroundWifiService extends Service implements LocationListener{
      */
     @Override
     public void onDestroy() {
+        showToast("background wifi service was destroyed");
         super.onDestroy();
-        Toast.makeText(this, "service done", Toast.LENGTH_SHORT).show();
 
-        Intent broadcastIntent = new Intent("uk.ac.shef.oak.ActivityRecognition.RestartSensor");
-        sendBroadcast(broadcastIntent);
-        stopTimerTask();
+        //Intent broadcastIntent = new Intent("uk.ac.shef.oak.ActivityRecognition.RestartSensor");
+        //sendBroadcast(broadcastIntent);
+        //stopTimerTask();
     }
 
     protected void showToast(final String msg){
@@ -223,25 +245,5 @@ public class BackgroundWifiService extends Service implements LocationListener{
             timer.cancel();
             timer = null;
         }
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-
     }
 }
