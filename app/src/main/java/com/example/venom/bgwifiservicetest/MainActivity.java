@@ -1,7 +1,6 @@
 package com.example.venom.bgwifiservicetest;
 
 import android.Manifest;
-import android.accessibilityservice.AccessibilityService;
 import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -10,11 +9,13 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
@@ -27,10 +28,11 @@ public class MainActivity extends AppCompatActivity {
     LocationManager mLocationManager;
     GPSLocationListener mLocationListener;
     PendingIntent mPendingIntent;
+    private View mLayout;
     private static final int PERMISSION_REQUEST_READ_SMS = 0;
-    private static final int PERMISSION_REQUEST_READ_PHONE_STATE = 0;
-    private static final int PERMISSION_REQUEST_ACCESS_FINE_LOCATION = 0;
-    private static final int PERMISSION_REQUEST_ACCESS_COARSE_LOCATION = 0;
+    private static final int PERMISSION_REQUEST_READ_PHONE_STATE = 1;
+    private static final int PERMISSION_REQUEST_ACCESS_FINE_LOCATION = 2;
+    private static final int PERMISSION_REQUEST_ACCESS_COARSE_LOCATION = 3;
 
     public Context getCtx() {
         return ctx;
@@ -40,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mLayout = findViewById(R.id.main_layout);
         ctx = this;
 
         LocationManager mLocationManager = (LocationManager)
@@ -98,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
     private void scheduleAlarms() {
         long futureInMillis = SystemClock.elapsedRealtime() + 5000;
         AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+
         // sets a single non repeating alarm
         // alarmManager.set(AlarmManager.ELAPSED_REALTIME, futureInMillis, pendingIntent);
 
@@ -108,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setTextInfo() {
-        final TextView textView = (TextView) findViewById(R.id.main_text);
+        final TextView textView = findViewById(R.id.main_text);
         String buildText = buildBuildText();
         String phoneNumberText = buildPhoneNumberText();
         String gpsText = buildGPSLocationText();
@@ -161,14 +165,16 @@ public class MainActivity extends AppCompatActivity {
         return ret;
     }
 
-    //http://www.digitstory.com/enable-gps-automatically-android/#.WqBP7-jwbIV
-    //http://rdcworld-android.blogspot.in/2012/01/get-current-location-coordinates-city.html
-    //https://stackoverflow.com/questions/1513485/how-do-i-get-the-current-gps-location-programmatically-in-android
+    /*
+    http://www.digitstory.com/enable-gps-automatically-android/#.WqBP7-jwbIV
+    http://rdcworld-android.blogspot.in/2012/01/get-current-location-coordinates-city.html
+    https://stackoverflow.com/questions/1513485/how-do-i-get-the-current-gps-location-programmatically-in-android
+    https://stackoverflow.com/questions/37322645/nullpointerexception-when-trying-to-check-permissions
+    https://developer.android.com/training/permissions/requesting.html#java
+    https://github.com/googlesamples/android-RuntimePermissionsBasic/
+    https://github.com/googlesamples/android-RuntimePermissions/
+    */
 
-    //https://stackoverflow.com/questions/37322645/nullpointerexception-when-trying-to-check-permissions
-    //https://developer.android.com/training/permissions/requesting.html#java
-    //https://github.com/googlesamples/android-RuntimePermissionsBasic/
-    //https://github.com/googlesamples/android-RuntimePermissions/
     /**
      * Requests the {@link android.Manifest.permission#CAMERA} permission.
      * If an additional rationale should be displayed, the user has to launch the request from
@@ -194,23 +200,45 @@ public class MainActivity extends AppCompatActivity {
             // and the user would benefit from additional context for the use of the permission.
             // Display a SnackBar with cda button to request the missing permission.
 
-            /*Snackbar.make(mLayout, R.string.camera_access_required,
+            Snackbar.make(mLayout, R.string.read_sms_access_required,
                     Snackbar.LENGTH_INDEFINITE).setAction(R.string.ok, new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     // Request the permission
                     ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission.CAMERA},
-                            PERMISSION_REQUEST_CAMERA);
+                            new String[]{Manifest.permission.READ_SMS},
+                            PERMISSION_REQUEST_READ_SMS);
                 }
-            }).show();*/
+            }).show();
 
         } else {
             Snackbar.make(mLayout, R.string.camera_unavailable, Snackbar.LENGTH_SHORT).show();
             // Request the permission. The result will be received in onRequestPermissionResult().
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA}, PERMISSION_REQUEST_CAMERA);
+                    new String[]{Manifest.permission.READ_SMS}, PERMISSION_REQUEST_READ_SMS);
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        // BEGIN_INCLUDE(onRequestPermissionsResult)
+        if (requestCode == PERMISSION_REQUEST_CAMERA) {
+            // Request for camera permission.
+            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission has been granted. Start camera preview Activity.
+                Snackbar.make(mLayout, R.string.camera_permission_granted,
+                        Snackbar.LENGTH_SHORT)
+                        .show();
+                startCamera();
+            } else {
+                // Permission request was denied.
+                Snackbar.make(mLayout, R.string.camera_permission_denied,
+                        Snackbar.LENGTH_SHORT)
+                        .show();
+            }
+        }
+        // END_INCLUDE(onRequestPermissionsResult)
     }
 
     public void startService(View view) {
@@ -235,7 +263,6 @@ public class MainActivity extends AppCompatActivity {
         Log.i ("isMyServiceRunning?", false+"");
         return false;
     }
-
 
     @Override
     protected void onDestroy() {
