@@ -3,9 +3,34 @@
     <string name="start_service_btn_txt">Start Service</string>
     <string name="stop_service_btn_txt">Stop Service</string>
     <string name="ok">OK</string>
+
     <string name="read_sms_access_required">Camera access is required to display the camera preview.</string>
-    <string name="camera_unavailable"><b>Camera could not be opened.</b>\nThis occurs when the camera is not available (for example it is already in use) or if the system has denied access (for example when camera access has been disabled).</string>
-    <string name="read_phone_state_required">Camera access is required to display the camera preview.</string>
-    <string name="coarse_location_required">Camera access is required to display the camera preview.</string>
-    <string name="fine_location_required">Camera access is required to display the camera preview.</string>
+    <string name="read_sms_unavailable"><b>Camera could not be opened.</b>\nThis occurs when the camera is not available (for example it is already in use) or if the system has denied access (for example when camera access has been disabled).</string>
+    <string name="read_sms_permission_not_available">Permission is not available. Requesting camera permission.</string>
+    <string name="read_sms_permission_granted">Camera permission was granted. Starting preview.</string>
+    <string name="read_sms_permission_denied">Camera permission request was denied.</string>
+
+    <string name="read_phone_state_access_required">Camera access is required to display the camera preview.</string>
+    <string name="read_phone_state_unavailable"><b>Camera could not be opened.</b>\nThis occurs when the camera is not available (for example it is already in use) or if the system has denied access (for example when camera access has been disabled).</string>
+    <string name="read_phone_state_permission_not_available">Permission is not available. Requesting camera permission.</string>
+    <string name="read_phone_state_permission_granted">Camera permission was granted. Starting preview.</string>
+    <string name="read_phone_state_permission_denied">Camera permission request was denied.</string>
+
+    <string name="phone_info_permission_available">Camera permission is available. Starting preview.</string>
+
+    <string name="coarse_location_access_required">Camera access is required to display the camera preview.</string>
+    <string name="coarse_location_unavailable"><b>Camera could not be opened.</b>\nThis occurs when the camera is not available (for example it is already in use) or if the system has denied access (for example when camera access has been disabled).</string>
+    <string name="coarse_location_permission_not_available">Permission is not available. Requesting camera permission.</string>
+    <string name="coarse_location_permission_available">Camera permission is available. Starting preview.</string>
+    <string name="coarse_location_permission_granted">Camera permission was granted. Starting preview.</string>
+    <string name="coarse_location_permission_denied">Camera permission request was denied.</string>
+
+    <string name="fine_location_access_required">Camera access is required to display the camera preview.</string>
+    <string name="fine_location_unavailable"><b>Camera could not be opened.</b>\nThis occurs when the camera is not available (for example it is already in use) or if the system has denied access (for example when camera access has been disabled).</string>
+    <string name="fine_location_permission_not_available">Permission is not available. Requesting camera permission.</string>
+    <string name="fine_location_permission_available">Camera permission is available. Starting preview.</string>
+    <string name="fine_location_permission_granted">Camera permission was granted. Starting preview.</string>
+    <string name="fine_location_permission_denied">Camera permission request was denied.</string>
+
+    <string name="bad_permission_request"></string>
 </resources>

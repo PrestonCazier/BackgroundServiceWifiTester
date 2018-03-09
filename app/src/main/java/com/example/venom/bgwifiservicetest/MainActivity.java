@@ -31,8 +31,8 @@ public class MainActivity extends AppCompatActivity {
     private View mLayout;
     private static final int PERMISSION_REQUEST_READ_SMS = 0;
     private static final int PERMISSION_REQUEST_READ_PHONE_STATE = 1;
-    private static final int PERMISSION_REQUEST_ACCESS_FINE_LOCATION = 2;
-    private static final int PERMISSION_REQUEST_ACCESS_COARSE_LOCATION = 3;
+    private static final int PERMISSION_REQUEST_ACCESS_COARSE_LOCATION = 2;
+    private static final int PERMISSION_REQUEST_ACCESS_FINE_LOCATION = 3;
 
     public Context getCtx() {
         return ctx;
@@ -150,56 +150,36 @@ public class MainActivity extends AppCompatActivity {
         Boolean permissionGrantedReadSMS = hasReadSMS == PackageManager.PERMISSION_GRANTED;
         Boolean permissionGrantedReadPhoneState = hasReadPhoneState == PackageManager.PERMISSION_GRANTED;
 
-        if (!permissionGrantedReadPhoneState && !permissionGrantedReadSMS) {
+        if (permissionGrantedReadPhoneState && permissionGrantedReadSMS) {
+            // Permission is already available, start camera preview
+            Snackbar.make(mLayout,
+                    R.string.phone_info_permission_available,
+                    Snackbar.LENGTH_SHORT).show();
+            String mPhoneNumber = tMgr.getLine1Number();
+            if (mPhoneNumber == null || mPhoneNumber.equals("") || mPhoneNumber.equals("???????")) {
+                mPhoneNumber = tMgr.getDeviceId();
+            }
+            String ret = "Phone Number: " + mPhoneNumber + "\n";
+            return ret;
+        }
+        if (!permissionGrantedReadSMS) {
             requestReadSMSPermission();
-            return "\n";
         }
-
-        String mPhoneNumber = tMgr.getLine1Number();
-
-        if (mPhoneNumber == null || mPhoneNumber.equals("") || mPhoneNumber.equals("???????")) {
-            mPhoneNumber = tMgr.getDeviceId();
+        if (!permissionGrantedReadPhoneState) {
+            requestReadPhoneStatePermission();
         }
-
-        String ret = "Phone Number: " + mPhoneNumber + "\n";
-        return ret;
+        return "\n";
     }
 
-    /*
-    http://www.digitstory.com/enable-gps-automatically-android/#.WqBP7-jwbIV
-    http://rdcworld-android.blogspot.in/2012/01/get-current-location-coordinates-city.html
-    https://stackoverflow.com/questions/1513485/how-do-i-get-the-current-gps-location-programmatically-in-android
-    https://stackoverflow.com/questions/37322645/nullpointerexception-when-trying-to-check-permissions
-    https://developer.android.com/training/permissions/requesting.html#java
-    https://github.com/googlesamples/android-RuntimePermissionsBasic/
-    https://github.com/googlesamples/android-RuntimePermissions/
-    */
-
     /**
-     * Requests the {@link android.Manifest.permission#CAMERA} permission.
+     * Requests the {@link android.Manifest.permission#READ_SMS} permission.
      * If an additional rationale should be displayed, the user has to launch the request from
      * a SnackBar that includes additional information.
      */
     private void requestReadSMSPermission() {
-        // TODO: Consider calling
-        //ActivityCompat.requestPermissions();
-        //    ActivityCompat#requestPermissions
-        // here to request the missing permissions, and then overriding
-        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-        //                                          int[] grantResults)
-        // to handle the case where the user grants the permission. See the documentation
-        // for ActivityCompat#requestPermissions for more details.
-
-        // Permission is not granted
-
-
         // Permission has not been granted and must be requested.
-        if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                Manifest.permission.READ_SMS)) {
-            // Provide an additional rationale to the user if the permission was not granted
-            // and the user would benefit from additional context for the use of the permission.
-            // Display a SnackBar with cda button to request the missing permission.
-
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_SMS)) {
+            //
             Snackbar.make(mLayout, R.string.read_sms_access_required,
                     Snackbar.LENGTH_INDEFINITE).setAction(R.string.ok, new View.OnClickListener() {
                 @Override
@@ -210,35 +190,191 @@ public class MainActivity extends AppCompatActivity {
                             PERMISSION_REQUEST_READ_SMS);
                 }
             }).show();
-
         } else {
-            Snackbar.make(mLayout, R.string.camera_unavailable, Snackbar.LENGTH_SHORT).show();
+            Snackbar.make(mLayout, R.string.read_sms_unavailable, Snackbar.LENGTH_SHORT).show();
             // Request the permission. The result will be received in onRequestPermissionResult().
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_SMS}, PERMISSION_REQUEST_READ_SMS);
         }
     }
 
+    /**
+     * Requests the {@link android.Manifest.permission#READ_PHONE_STATE} permission.
+     * If an additional rationale should be displayed, the user has to launch the request from
+     * a SnackBar that includes additional information.
+     */
+    private void requestReadPhoneStatePermission() {
+        // Permission has not been granted and must be requested.
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_PHONE_STATE)) {
+            //
+            Snackbar.make(mLayout, R.string.read_phone_state_access_required,
+                    Snackbar.LENGTH_INDEFINITE).setAction(R.string.ok, new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // Request the permission
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.READ_PHONE_STATE},
+                            PERMISSION_REQUEST_READ_PHONE_STATE);
+                }
+            }).show();
+        } else {
+            Snackbar.make(mLayout, R.string.read_phone_state_unavailable, Snackbar.LENGTH_SHORT).show();
+            // Request the permission. The result will be received in onRequestPermissionResult().
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_PHONE_STATE}, PERMISSION_REQUEST_READ_PHONE_STATE);
+        }
+    }
+
+    /**
+     * Requests the {@link android.Manifest.permission#ACCESS_COARSE_LOCATION} permission.
+     * If an additional rationale should be displayed, the user has to launch the request from
+     * a SnackBar that includes additional information.
+     */
+    private void requestCoarseLocationPermission() {
+        // Permission has not been granted and must be requested.
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+            //
+            Snackbar.make(mLayout, R.string.coarse_location_access_required,
+                    Snackbar.LENGTH_INDEFINITE).setAction(R.string.ok, new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // Request the permission
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                            PERMISSION_REQUEST_ACCESS_COARSE_LOCATION);
+                }
+            }).show();
+        } else {
+            Snackbar.make(mLayout, R.string.coarse_location_unavailable, Snackbar.LENGTH_SHORT).show();
+            // Request the permission. The result will be received in onRequestPermissionResult().
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_ACCESS_COARSE_LOCATION);
+        }
+    }
+
+    /**
+     * Requests the {@link android.Manifest.permission#ACCESS_FINE_LOCATION} permission.
+     * If an additional rationale should be displayed, the user has to launch the request from
+     * a SnackBar that includes additional information.
+     */
+    private void requestFineLocationPermission() {
+        // Permission has not been granted and must be requested.
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            //
+            Snackbar.make(mLayout, R.string.fine_location_access_required,
+                    Snackbar.LENGTH_INDEFINITE).setAction(R.string.ok, new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // Request the permission
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                            PERMISSION_REQUEST_ACCESS_FINE_LOCATION);
+                }
+            }).show();
+        } else {
+            Snackbar.make(mLayout, R.string.fine_location_unavailable, Snackbar.LENGTH_SHORT).show();
+            // Request the permission. The result will be received in onRequestPermissionResult().
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_ACCESS_FINE_LOCATION);
+        }
+    }
+
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         // BEGIN_INCLUDE(onRequestPermissionsResult)
-        if (requestCode == PERMISSION_REQUEST_CAMERA) {
-            // Request for camera permission.
-            if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_READ_SMS:
+                askForReadSMS(requestCode, permissions, grantResults);
+                break;
+            case PERMISSION_REQUEST_READ_PHONE_STATE:
+                askForReadPhoneState(requestCode, permissions, grantResults);
+                break;
+            case PERMISSION_REQUEST_ACCESS_COARSE_LOCATION:
+                askForCoarseLocation(requestCode, permissions, grantResults);
+                break;
+            case PERMISSION_REQUEST_ACCESS_FINE_LOCATION:
+                askForFineLocation(requestCode, permissions, grantResults);
+                break;
+            default:
                 // Permission has been granted. Start camera preview Activity.
-                Snackbar.make(mLayout, R.string.camera_permission_granted,
+                Snackbar.make(mLayout, R.string.bad_permission_request,
                         Snackbar.LENGTH_SHORT)
                         .show();
-                startCamera();
-            } else {
-                // Permission request was denied.
-                Snackbar.make(mLayout, R.string.camera_permission_denied,
-                        Snackbar.LENGTH_SHORT)
-                        .show();
-            }
+                break;
         }
         // END_INCLUDE(onRequestPermissionsResult)
+    }
+
+    public void askForReadSMS(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        // Request for camera permission.
+        if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // Permission has been granted. Start camera preview Activity.
+            Snackbar.make(mLayout, R.string.read_sms_permission_granted,
+                    Snackbar.LENGTH_SHORT)
+                    .show();
+            // do something here because permission was granted
+            setTextInfo();
+        } else {
+            // Permission request was denied.
+            Snackbar.make(mLayout, R.string.read_sms_permission_denied,
+                    Snackbar.LENGTH_SHORT)
+                    .show();
+            // do something here because permission was denied
+        }
+    }
+
+    public void askForReadPhoneState(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        // Request for camera permission.
+        if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // Permission has been granted. Start camera preview Activity.
+            Snackbar.make(mLayout, R.string.read_phone_state_permission_granted,
+                    Snackbar.LENGTH_SHORT)
+                    .show();
+            // do something here because permission was granted
+            setTextInfo();
+        } else {
+            // Permission request was denied.
+            Snackbar.make(mLayout, R.string.read_phone_state_permission_denied,
+                    Snackbar.LENGTH_SHORT)
+                    .show();
+            // do something here because permission was denied
+        }
+    }
+
+    public void askForCoarseLocation(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        // Request for camera permission.
+        if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // Permission has been granted. Start camera preview Activity.
+            Snackbar.make(mLayout, R.string.coarse_location_permission_granted,
+                    Snackbar.LENGTH_SHORT)
+                    .show();
+            // do something here because permission was granted
+            setTextInfo();
+        } else {
+            // Permission request was denied.
+            Snackbar.make(mLayout, R.string.coarse_location_permission_denied,
+                    Snackbar.LENGTH_SHORT)
+                    .show();
+            // do something here because permission was denied
+        }
+    }
+
+    public void askForFineLocation(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        // Request for camera permission.
+        if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // Permission has been granted. Start camera preview Activity.
+            Snackbar.make(mLayout, R.string.fine_location_permission_granted,
+                    Snackbar.LENGTH_SHORT)
+                    .show();
+            // do something here because permission was granted
+            setTextInfo();
+        } else {
+            // Permission request was denied.
+            Snackbar.make(mLayout, R.string.fine_location_permission_denied,
+                    Snackbar.LENGTH_SHORT)
+                    .show();
+            // do something here because permission was denied
+        }
     }
 
     public void startService(View view) {
